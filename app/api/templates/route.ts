@@ -8,14 +8,16 @@ type GoogleServiceAccount = {
 };
 
 function getServiceAccountCredentials(): GoogleServiceAccount {
-  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON;
+  const credentialsJson =
+    process.env.GOOGLE_CREDENTIALS_JSON ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
   if (credentialsJson) {
     const parsed = JSON.parse(credentialsJson) as GoogleServiceAccount;
 
     if (!parsed.client_email || !parsed.private_key) {
       throw new Error(
-        "GOOGLE_CREDENTIALS_JSON is missing client_email or private_key."
+        "Google service account JSON is missing client_email or private_key."
       );
     }
 
@@ -32,7 +34,7 @@ function getServiceAccountCredentials(): GoogleServiceAccount {
 
   if (!clientEmail || !privateKey) {
     throw new Error(
-      "Missing Google credentials. Set GOOGLE_CREDENTIALS_JSON or GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY."
+      "Missing Google credentials. Set GOOGLE_CREDENTIALS_JSON or GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY."
     );
   }
 
@@ -46,12 +48,14 @@ function getServiceAccountCredentials(): GoogleServiceAccount {
 function getTemplateFolderId(): string {
   const folderId =
     process.env.GOOGLE_DRIVE_TEMPLATE_FOLDER_ID ||
+    process.env.GOOGLE_DRIVE_TEMPLATES_FOLDER_ID ||
     process.env.TEMPLATE_FOLDER_ID ||
-    process.env.PDF_TEMPLATE_FOLDER_ID;
+    process.env.PDF_TEMPLATE_FOLDER_ID ||
+    process.env.GOOGLE_DRIVE_FOLDER_ID;
 
   if (!folderId) {
     throw new Error(
-      "Missing template folder ID. Set GOOGLE_DRIVE_TEMPLATE_FOLDER_ID or TEMPLATE_FOLDER_ID or PDF_TEMPLATE_FOLDER_ID."
+      "Missing template folder ID. Set GOOGLE_DRIVE_TEMPLATE_FOLDER_ID or GOOGLE_DRIVE_TEMPLATES_FOLDER_ID or TEMPLATE_FOLDER_ID or PDF_TEMPLATE_FOLDER_ID or GOOGLE_DRIVE_FOLDER_ID."
     );
   }
 
