@@ -6,10 +6,7 @@ import { Rnd } from "react-rnd"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString()
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export type PdfFieldType = "signature" | "text" | "date"
 
@@ -83,7 +80,7 @@ export default function PdfViewer({
                       key={field.id}
                       size={{ width: field.width, height: field.height }}
                       position={{ x: field.x, y: field.y }}
-                      disableDragging={isLocked}
+                      disableDragging={isLocked}h
                       enableResizing={
                         isLocked
                           ? false
