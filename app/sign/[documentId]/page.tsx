@@ -257,7 +257,7 @@ export default function SignPage() {
       })
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.error || "Failed to save signed document")
-      setSubmitMessage("Your document has been signed successfully!")
+      setSubmitMessage(result.fileId ? "Your document has been signed and saved!" : "Your document has been signed successfully!")
       setSavedFileLink(result.webViewLink || "")
       setSavedFileName(result.fileName || "")
       setSignedPdfBase64(result.signedPdfBase64 || "")
@@ -287,18 +287,20 @@ export default function SignPage() {
         <p style={{ margin: "6px 0 0", color: C.textMuted, fontSize: "14px" }}>Click a field on the PDF to fill it in.</p>
       </div>
 
-      {/* Status bar */}
+      {/* Status bar - sticky */}
       <div style={{
         display: "flex", gap: "12px", marginBottom: "24px", padding: "12px 16px",
         background: C.surface, borderRadius: "10px", border: `1px solid ${C.border}`,
-        alignItems: "center", flexWrap: "wrap"
+        alignItems: "center", flexWrap: "wrap",
+        position: "sticky", top: "60px", zIndex: 50,
+        boxShadow: "0 4px 20px rgba(0,0,0,0.4)"
       }}>
         <span style={{ fontSize: "13px", color: C.textMuted }}>
           Fields filled: <strong style={{ color: C.text }}>{Object.keys(values).length}</strong> / <strong style={{ color: C.text }}>{fields.length}</strong>
         </span>
         <div style={{ flex: 1 }} />
         <button style={primaryBtn} onClick={submitSignedDocument} disabled={isSubmittingSignedDocument}>
-          {isSubmittingSignedDocument ? "Saving..." : "💾 Save Signed PDF to Drive"}
+          {isSubmittingSignedDocument ? "Completing..." : "✅ Complete Signed PDF"}
         </button>
       </div>
 
