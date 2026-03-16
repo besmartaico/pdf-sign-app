@@ -226,7 +226,9 @@ export async function POST(req: NextRequest) {
       fileId: uploaded.id,
       fileName: uploaded.name,
       webViewLink: uploaded.webViewLink,
-      folderName: folderMetadata.name || ""
+      folderName: folderMetadata.name || "",
+      signedPdfBase64: Buffer.from(signedPdfBytes).toString("base64"),
+      signedFileName
     })
   } catch (error: unknown) {
     console.error("Failed to generate signed PDF:", error)
