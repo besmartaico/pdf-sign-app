@@ -16,14 +16,20 @@ export default function AdminDocumentsPage() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [sendingId, setSendingId] = useState<string | null>(null)
   const [sendModal, setSendModal] = useState<{ doc: Template } | null>(null)
   const [signerEmail, setSignerEmail] = useState("")
   const [signerName, setSignerName] = useState("")
   const [sendStatus, setSendStatus] = useState("")
   const [isSending, setIsSending] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [previewModal, setPreviewModal] = useState<{ doc: Template } | null>(null)
 
   useEffect(() => {
+    loadTemplates()
+  }, [])
+
+  function loadTemplates() {
+    setLoading(true)
     fetch("/api/templates")
       .then((r) => r.json())
       .then((data) => {
@@ -34,7 +40,24 @@ export default function AdminDocumentsPage() {
         setError("Failed to load templates.")
         setLoading(false)
       })
-  }, [])
+  }
+
+  async function handleDelete(doc: Template) {
+    if (!confirm(`Delete "${doc.name}"? This cannot be undone.`)) return
+    setDeletingId(doc.id)
+    try {
+      const res = await fetch(`/api/templates/${doc.id}`, { method: "DELETE" })
+      if (res.ok) {
+        setTemplates(prev => prev.filter(t => t.id !== doc.id))
+      } else {
+        alert("Failed to delete file.")
+      }
+    } catch {
+      alert("Failed to delete file.")
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   async function handleSendToSigner() {
     if (!sendModal) return
@@ -64,8 +87,9 @@ export default function AdminDocumentsPage() {
   }
 
   const btnBase: React.CSSProperties = {
-    padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer",
-    fontWeight: 600, fontSize: "13px", transition: "all 0.15s"
+    padding: "8px 14px", borderRadius: "8px", border: "none", cursor: "pointer",
+    fontWeight: 600, fontSize: "13px", transition: "all 0.15s", textDecoration: "none",
+    display: "inline-flex", alignItems: "center", gap: "5px"
   }
 
   return (
@@ -90,8 +114,7 @@ export default function AdminDocumentsPage() {
         {templates.map((doc) => (
           <div key={doc.id} style={{
             background: C.surface, border: `1px solid ${C.border}`, borderRadius: "12px",
-            padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px",
-            transition: "border-color 0.15s"
+            padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px"
           }}>
             <div style={{
               width: "40px", height: "40px", background: C.accentGlow,
@@ -107,21 +130,71 @@ export default function AdminDocumentsPage() {
               <div style={{ fontSize: "12px", color: C.textDim, fontFamily: "monospace" }}>{doc.id}</div>
             </div>
 
-            <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
               <a href={`/admin/documents/${doc.id}/place-fields`} style={{
-                ...btnBase, background: C.accentGlow, color: C.accent,
-                border: `1px solid ${C.border}`, textDecoration: "none", display: "inline-block"
+                ...btnBase, background: C.accentGlow, color: C.accent, border: `1px solid ${C.border}`
               }}>
-                Place Fields
+                ✏️ Place Fields
               </a>
-              <button style={{ ...btnBase, background: "#1a2540", color: "#34d399", border: "1px solid #065f46" }}
+              <button style={{ ...btnBase, background: "rgba(34,197,94,0.1)", color: "#34d399", border: "1px solid #065f46" }}
+                onClick={() => setPreviewModal({ doc })}>
+                👁️ Preview
+              </button>
+              <button style={{ ...btnBase, background: "rgba(59,130,246,0.1)", color: C.accent, border: `1px solid ${C.border}` }}
                 onClick={() => { setSendModal({ doc }); setSignerEmail(""); setSignerName(""); setSendStatus("") }}>
-                ✉️ Send to Signer
+                ✉️ Send
+              </button>
+              <button
+                onClick={() => handleDelete(doc)}
+                disabled={deletingId === doc.id}
+                title="Delete template"
+                style={{
+                  ...btnBase, background: "transparent", color: "#ef4444",
+                  border: "1px solid #7f1d1d", padding: "8px 10px",
+                  opacity: deletingId === doc.id ? 0.5 : 1
+                }}>
+                {deletingId === doc.id ? "..." : "✕"}
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Signer Preview Modal */}
+      {previewModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1000, background: C.modalBg,
+          display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)"
+        }} onClick={(e) => { if (e.target === e.currentTarget) setPreviewModal(null) }}>
+          <div style={{
+            background: C.surface, borderRadius: "16px", border: `1px solid ${C.border}`,
+            width: "95vw", maxWidth: "1100px", height: "90vh",
+            display: "flex", flexDirection: "column",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.7)"
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "16px 24px", borderBottom: `1px solid ${C.border}`
+            }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: C.text }}>👁️ Signer Preview</h2>
+                <p style={{ margin: "2px 0 0", fontSize: "12px", color: C.textMuted }}>{previewModal.doc.name}</p>
+              </div>
+              <button onClick={() => setPreviewModal(null)} style={{
+                background: "transparent", border: "none", color: C.textMuted,
+                fontSize: "22px", cursor: "pointer", padding: "4px 10px", borderRadius: "6px"
+              }}>×</button>
+            </div>
+            <div style={{ flex: 1, overflow: "hidden", borderRadius: "0 0 16px 16px" }}>
+              <iframe
+                src={`/sign/${previewModal.doc.id}`}
+                style={{ width: "100%", height: "100%", border: "none", background: C.bg }}
+                title="Signer Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Send to Signer Modal */}
       {sendModal && (
@@ -189,7 +262,7 @@ export default function AdminDocumentsPage() {
                 )}
 
                 <div style={{ display: "flex", gap: "10px" }}>
-                  <button style={{ ...btnBase, background: C.accent, color: "#fff", flex: 1, padding: "11px" }}
+                  <button style={{ ...btnBase, background: C.accent, color: "#fff", flex: 1, padding: "11px", justifyContent: "center" }}
                     onClick={handleSendToSigner} disabled={isSending}>
                     {isSending ? "Sending..." : "Send Signing Link"}
                   </button>
