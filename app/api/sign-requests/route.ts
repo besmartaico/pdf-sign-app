@@ -221,6 +221,41 @@ export async function POST(req: NextRequest) {
       mimeType: "application/pdf"
     })
 
+    // Send notification email to admin
+    const resendApiKey = process.env.RESEND_API_KEY
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || "besmartai.co@gmail.com"
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@resend.dev"
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pdf-sign-app-vert.vercel.app"
+    if (resendApiKey) {
+      const now = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [adminEmail],
+          subject: `✅ Document Signed: ${originalMetadata.name || "Document"}`,
+          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#111827;border-radius:12px;border:1px solid #1e3a5f;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#166534,#16a34a);padding:24px 32px;">
+              <h2 style="margin:0;color:#fff;font-size:20px;">✅ Document Signed</h2>
+            </div>
+            <div style="padding:28px 32px;">
+              <p style="color:#e2e8f0;margin:0 0 16px;">A document has been signed and saved to Google Drive.</p>
+              <div style="background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+                <div style="color:#64748b;font-size:12px;margin-bottom:4px;">Document</div>
+                <div style="color:#e2e8f0;font-weight:600;">${originalMetadata.name || "Document"}</div>
+                <div style="color:#64748b;font-size:12px;margin-top:10px;margin-bottom:4px;">Signed File</div>
+                <div style="color:#e2e8f0;">${signedFileName}</div>
+                <div style="color:#64748b;font-size:12px;margin-top:10px;margin-bottom:4px;">Time</div>
+                <div style="color:#e2e8f0;">${now}</div>
+              </div>
+              ${uploaded.webViewLink ? `<a href="${uploaded.webViewLink}" style="display:inline-block;background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Google Drive</a>` : ""}
+            </div>
+          </div>`
+        })
+      }).catch(() => {}) // fire-and-forget
+    }
+
     return NextResponse.json({
       success: true,
       fileId: uploaded.id,
