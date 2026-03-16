@@ -2,38 +2,46 @@ import { NextRequest, NextResponse } from "next/server"
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || ""
 const COOKIE_NAME = "admin_auth"
-const COOKIE_MAX_AGE = 60 * 60 * 8 // 8 hours
 
-// Only protect /admin routes — /sign/* is public for signers
+// Protect root and all /admin routes except /admin/login
 export const config = {
-  matcher: ["/admin/:path*"]
+  matcher: ["/", "/admin/:path*"]
 }
 
 export function middleware(req: NextRequest) {
-  // If no password is set, allow access (dev mode)
-  if (!ADMIN_PASSWORD) return NextResponse.next()
-
   const { pathname } = req.nextUrl
 
-  // Allow the login form POST
-  if (pathname === "/admin/login") {
+  // Always allow the login page and auth API through
+  if (pathname === "/admin/login" || pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
+
+  // If no password set (dev mode), redirect root → documents
+  if (!ADMIN_PASSWORD) {
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/admin/documents", req.url))
+    }
     return NextResponse.next()
   }
 
   // Check auth cookie
   const cookie = req.cookies.get(COOKIE_NAME)
-  if (cookie?.value === ADMIN_PASSWORD) {
-    return NextResponse.next()
+  const isAuthed = cookie?.value === ADMIN_PASSWORD
+
+  // Redirect root → login or documents depending on auth state
+  if (pathname === "/") {
+    if (isAuthed) {
+      return NextResponse.redirect(new URL("/admin/documents", req.url))
+    }
+    return NextResponse.redirect(new URL("/admin/login", req.url))
   }
 
-  // Handle login form submission
-  if (req.method === "POST") {
-    return NextResponse.next()
+  // Protect all /admin/* routes
+  if (!isAuthed) {
+    const loginUrl = new URL("/admin/login", req.url)
+    loginUrl.searchParams.set("from", pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Redirect to login page
-  const loginUrl = req.nextUrl.clone()
-  loginUrl.pathname = "/admin/login"
-  loginUrl.searchParams.set("from", pathname)
-  return NextResponse.redirect(loginUrl)
+  return NextResponse.next()
 }
