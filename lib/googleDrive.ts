@@ -136,3 +136,9 @@ export async function listFilesInFolderWithServiceAccount(params: {
 
   return response.data.files || []
 }
+
+export async function deleteFileWithServiceAccount({ fileId }: { fileId: string }) {
+  const auth = getServiceAccountAuth()
+  const drive = google.drive({ version: "v3", auth })
+  await drive.files.delete({ fileId })
+}
