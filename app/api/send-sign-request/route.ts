@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getGoogleDriveFileMetadataWithServiceAccount } from "../../../lib/googleDrive"
 
 export async function POST(req: NextRequest) {
   try {
-    const { documentId, documentName, signerEmail, signerName } = await req.json()
+    const { documentId, documentName, signerEmail, signerName, fields } = await req.json()
 
     if (!documentId || !signerEmail) {
       return NextResponse.json({ success: false, error: "Missing documentId or signerEmail" }, { status: 400 })
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${req.headers.get("host")}`
-    const signingLink = `${appUrl}/sign/${documentId}`
+
+    // Encode fields into the URL so signers see them without needing localStorage
+    let signingLink = `${appUrl}/sign/${documentId}`
+    if (fields && Array.isArray(fields) && fields.length > 0) {
+      const encoded = Buffer.from(JSON.stringify(fields)).toString("base64url")
+      signingLink = `${signingLink}?fields=${encoded}`
+    }
 
     const resendApiKey = process.env.RESEND_API_KEY
     if (!resendApiKey) {
@@ -27,7 +34,7 @@ export async function POST(req: NextRequest) {
   <div style="max-width:560px;margin:40px auto;background:#111827;border-radius:16px;border:1px solid #1e3a5f;overflow:hidden;">
     <div style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:32px 40px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px;">S</div>
+        <div style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px;">S</div>
         <span style="color:#fff;font-weight:700;font-size:18px;">SignFlow</span>
       </div>
       <p style="margin:0;color:rgba(255,255,255,0.8);font-size:14px;">Document Signing Request</p>
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
         <div style="font-size:15px;font-weight:600;color:#e2e8f0;">${documentName || "Document"}</div>
       </div>
       <a href="${signingLink}" style="display:block;text-align:center;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:16px;margin-bottom:24px;">
-        ✍️ Open &amp; Sign Document
+        &#9998; Open &amp; Sign Document
       </a>
       <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">
         Or copy this link into your browser:<br>
@@ -50,7 +57,7 @@ export async function POST(req: NextRequest) {
       </p>
     </div>
     <div style="padding:20px 40px;border-top:1px solid #1e3a5f;">
-      <p style="margin:0;color:#475569;font-size:12px;">Sent via SignFlow · If you did not expect this email, you can ignore it.</p>
+      <p style="margin:0;color:#475569;font-size:12px;">Sent via SignFlow &middot; If you did not expect this email, you can ignore it.</p>
     </div>
   </div>
 </body>
