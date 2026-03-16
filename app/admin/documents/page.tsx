@@ -49,7 +49,8 @@ export default function AdminDocumentsPage() {
           documentId: sendModal.doc.id,
           documentName: sendModal.doc.name,
           signerEmail,
-          signerName
+          signerName,
+          fields: JSON.parse(localStorage.getItem(`template-fields-${sendModal.doc.id}`) || "[]")
         })
       })
       const result = await res.json()
