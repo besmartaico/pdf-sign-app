@@ -27,7 +27,7 @@ export default function AdminDocumentsPage() {
     fetch("/api/templates")
       .then((r) => r.json())
       .then((data) => {
-        setTemplates(data.files || [])
+        setTemplates(Array.isArray(data) ? data : (data.files || []))
         setLoading(false)
       })
       .catch(() => {
