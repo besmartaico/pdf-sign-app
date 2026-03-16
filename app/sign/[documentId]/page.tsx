@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import type { PdfField } from "../../../components/PdfViewer"
 import type {
   FilledFieldValue,
@@ -71,6 +71,7 @@ const C = {
 
 export default function SignPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const documentId = params.documentId as string
   const fileUrl = `/api/templates/${documentId}`
   const storageKey = `template-fields-${documentId}`
@@ -100,12 +101,23 @@ export default function SignPage() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
+    // First try URL-encoded fields (from email link)
+    const urlFields = searchParams.get("fields")
+    if (urlFields) {
+      try {
+        const decoded = JSON.parse(atob(urlFields.replace(/-/g, "+").replace(/_/g, "/"))) as PdfField[]
+        setFields(decoded)
+        setIsLoaded(true)
+        return
+      } catch { /* fall through to localStorage */ }
+    }
+    // Fall back to localStorage (admin's own browser)
     const savedFields = localStorage.getItem(storageKey)
     const savedValues = localStorage.getItem(valuesStorageKey)
     if (savedFields) setFields(JSON.parse(savedFields) as PdfField[])
     if (savedValues) setValues(JSON.parse(savedValues) as Record<string, FilledFieldValue>)
     setIsLoaded(true)
-  }, [storageKey, valuesStorageKey])
+  }, [storageKey, valuesStorageKey, searchParams])
 
   useEffect(() => {
     if (!isLoaded) return
