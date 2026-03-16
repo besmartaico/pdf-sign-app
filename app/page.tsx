@@ -1,12 +1,5 @@
-export default function HomePage() {
-  return (
-    <div>
-      <h1>PDF Sign App</h1>
-      <p>MVP starting point</p>
+import { redirect } from "next/navigation"
 
-      <div style={{ marginTop: "30px" }}>
-        <a href="/admin/documents">Admin Documents</a>
-      </div>
-    </div>
-  )
+export default function RootPage() {
+  redirect("/admin/login")
 }
