@@ -94,6 +94,8 @@ export default function SignPage() {
   const [submitMessage, setSubmitMessage] = useState("")
   const [savedFileLink, setSavedFileLink] = useState("")
   const [savedFileName, setSavedFileName] = useState("")
+  const [signedPdfBase64, setSignedPdfBase64] = useState("")
+  const [signedPdfFileName, setSignedPdfFileName] = useState("")
   const [isLoaded, setIsLoaded] = useState(false)
 
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -244,6 +246,8 @@ export default function SignPage() {
     setSubmitMessage("")
     setSavedFileLink("")
     setSavedFileName("")
+    setSignedPdfBase64("")
+    setSignedPdfFileName("")
     setIsSubmittingSignedDocument(true)
     try {
       const response = await fetch("/api/sign-requests", {
@@ -253,9 +257,11 @@ export default function SignPage() {
       })
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.error || "Failed to save signed document")
-      setSubmitMessage("Signed PDF saved to Drive.")
+      setSubmitMessage("Your document has been signed successfully!")
       setSavedFileLink(result.webViewLink || "")
       setSavedFileName(result.fileName || "")
+      setSignedPdfBase64(result.signedPdfBase64 || "")
+      setSignedPdfFileName(result.signedFileName || result.fileName || "signed-document.pdf")
     } catch (error) {
       setSubmitMessage(error instanceof Error ? error.message : "Failed to save signed document")
     } finally {
@@ -298,18 +304,33 @@ export default function SignPage() {
 
       {submitMessage && (
         <div style={{
-          marginBottom: "16px", padding: "12px 16px", borderRadius: "8px",
-          background: submitMessage.includes("saved") || submitMessage.includes("Drive") ? C.successBg : C.dangerBg,
-          color: submitMessage.includes("saved") || submitMessage.includes("Drive") ? C.success : C.danger,
-          border: `1px solid ${submitMessage.includes("saved") || submitMessage.includes("Drive") ? C.success : C.danger}40`,
+          marginBottom: "16px", padding: "16px 20px", borderRadius: "10px",
+          background: signedPdfBase64 ? C.successBg : C.dangerBg,
+          color: signedPdfBase64 ? C.success : C.danger,
+          border: `1px solid ${signedPdfBase64 ? C.success : C.danger}40`,
           fontSize: "14px"
         }}>
-          {submitMessage}
-          {savedFileLink && (
-            <a href={savedFileLink} target="_blank" rel="noreferrer"
-              style={{ marginLeft: "12px", color: C.accent, fontWeight: 600 }}>
-              Open in Drive →
-            </a>
+          <div style={{ marginBottom: signedPdfBase64 ? "12px" : 0 }}>{submitMessage}</div>
+          {signedPdfBase64 && (
+            <button
+              onClick={() => {
+                const bytes = Uint8Array.from(atob(signedPdfBase64), c => c.charCodeAt(0))
+                const blob = new Blob([bytes], { type: "application/pdf" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = signedPdfFileName
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                padding: "10px 20px", borderRadius: "8px", border: "none",
+                background: C.success, color: "#fff", fontWeight: 700,
+                fontSize: "14px", cursor: "pointer"
+              }}>
+              ⬇️ Download Signed PDF
+            </button>
           )}
         </div>
       )}
