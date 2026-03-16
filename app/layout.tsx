@@ -4,8 +4,7 @@ export const metadata: Metadata = {
   title: "health.BeSmartAI",
   description: "Document signing powered by BeSmartAI",
   icons: {
-    icon: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w",
-    apple: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
+    icon: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
   }
 }
 
@@ -16,6 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w" />
+      </head>
       <body style={{
         fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
         margin: 0,
@@ -41,16 +43,11 @@ export default function RootLayout({
             <img
               src="https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
               alt="BeSmartAI Logo"
-              style={{ width: "36px", height: "36px", objectFit: "contain", filter: "invert(1) brightness(2)" }}
+              style={{ height: "40px", width: "auto", objectFit: "contain" }}
             />
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "15px", color: "#f1f5f9", letterSpacing: "-0.3px", lineHeight: 1.1 }}>
-                health<span style={{ color: "#3b82f6" }}>.</span>BeSmartAI
-              </div>
-              <div style={{ fontSize: "10px", color: "#64748b", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-                Document Signing
-              </div>
-            </div>
+            <span style={{ fontWeight: 700, fontSize: "16px", color: "#f1f5f9", letterSpacing: "-0.3px" }}>
+              health.<span style={{ color: "#3b82f6" }}>BeSmartAI</span>
+            </span>
           </a>
           <div style={{ display: "flex", gap: "24px" }}>
             <a href="/admin/documents" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>Documents</a>
