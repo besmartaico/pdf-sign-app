@@ -1,6 +1,12 @@
-export const metadata = {
-  title: "PDF Sign App",
-  description: "Simple document signing MVP"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "health.BeSmartAI",
+  description: "Document signing powered by BeSmartAI",
+  icons: {
+    icon: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w",
+    apple: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
+  }
 }
 
 export default function RootLayout({
@@ -22,7 +28,7 @@ export default function RootLayout({
           background: "#111827",
           borderBottom: "1px solid #1e3a5f",
           padding: "0 32px",
-          height: "56px",
+          height: "60px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -31,14 +37,21 @@ export default function RootLayout({
           zIndex: 100,
           boxShadow: "0 1px 20px rgba(59,130,246,0.1)"
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              width: "28px", height: "28px", background: "linear-gradient(135deg,#3b82f6,#1d4ed8)",
-              borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "14px", fontWeight: 700, color: "#fff"
-            }}>S</div>
-            <span style={{ fontWeight: 700, fontSize: "16px", color: "#f1f5f9", letterSpacing: "-0.3px" }}>SignFlow</span>
-          </div>
+          <a href="/admin/documents" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+            <img
+              src="https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
+              alt="BeSmartAI Logo"
+              style={{ width: "36px", height: "36px", objectFit: "contain", filter: "invert(1) brightness(2)" }}
+            />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "15px", color: "#f1f5f9", letterSpacing: "-0.3px", lineHeight: 1.1 }}>
+                health<span style={{ color: "#3b82f6" }}>.</span>BeSmartAI
+              </div>
+              <div style={{ fontSize: "10px", color: "#64748b", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                Document Signing
+              </div>
+            </div>
+          </a>
           <div style={{ display: "flex", gap: "24px" }}>
             <a href="/admin/documents" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>Documents</a>
           </div>
