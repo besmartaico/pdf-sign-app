@@ -1,218 +1,206 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react"
 
-type Template = {
-  id: string;
-  name: string;
-  mimeType?: string;
-  webViewLink?: string | null;
-  thumbnailLink?: string | null;
-  createdTime?: string | null;
-  modifiedTime?: string | null;
-  size?: string | null;
-};
+const C = {
+  bg: "#0a0a0f", surface: "#111827", border: "#1e3a5f", borderLight: "#2d4a6e",
+  accent: "#3b82f6", accentGlow: "rgba(59,130,246,0.15)", text: "#e2e8f0",
+  textMuted: "#94a3b8", textDim: "#64748b", success: "#22c55e",
+  successBg: "rgba(34,197,94,0.1)", danger: "#ef4444", dangerBg: "rgba(239,68,68,0.1)",
+  inputBg: "#0f172a", modalBg: "rgba(0,0,0,0.75)"
+}
+
+type Template = { id: string; name: string; webViewLink?: string }
 
 export default function AdminDocumentsPage() {
-  const router = useRouter();
-
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [sendingId, setSendingId] = useState<string | null>(null)
+  const [sendModal, setSendModal] = useState<{ doc: Template } | null>(null)
+  const [signerEmail, setSignerEmail] = useState("")
+  const [signerName, setSignerName] = useState("")
+  const [sendStatus, setSendStatus] = useState("")
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
-    let isMounted = true;
+    fetch("/api/templates")
+      .then((r) => r.json())
+      .then((data) => {
+        setTemplates(data.files || [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to load templates.")
+        setLoading(false)
+      })
+  }, [])
 
-    async function loadTemplates() {
-      try {
-        setIsLoading(true);
-        setError("");
-
-        const response = await fetch("/api/templates", {
-          cache: "no-store",
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data?.details || data?.error || "Failed to load templates.");
-        }
-
-        if (!Array.isArray(data)) {
-          throw new Error("Unexpected API response. Expected an array of templates.");
-        }
-
-        if (isMounted) {
-          setTemplates(data);
-        }
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to load templates.";
-
-        if (isMounted) {
-          setError(message);
-          setTemplates([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+  async function handleSendToSigner() {
+    if (!sendModal) return
+    if (!signerEmail) { setSendStatus("Please enter an email address."); return }
+    setIsSending(true)
+    setSendStatus("")
+    try {
+      const res = await fetch("/api/send-sign-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId: sendModal.doc.id,
+          documentName: sendModal.doc.name,
+          signerEmail,
+          signerName
+        })
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) throw new Error(result.error || "Failed to send")
+      setSendStatus("success")
+    } catch (e) {
+      setSendStatus(e instanceof Error ? e.message : "Failed to send email")
+    } finally {
+      setIsSending(false)
     }
+  }
 
-    loadTemplates();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  function openTemplate(template: Template) {
-    router.push(`/admin/documents/${template.id}/place-fields`);
+  const btnBase: React.CSSProperties = {
+    padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer",
+    fontWeight: 600, fontSize: "13px", transition: "all 0.15s"
   }
 
   return (
-    <main style={{ padding: "32px" }}>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginBottom: "12px" }}>
-        Admin Documents
-      </h1>
+    <div style={{ color: C.text }}>
+      <div style={{ marginBottom: "28px" }}>
+        <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: C.text }}>Documents</h1>
+        <p style={{ margin: "6px 0 0", color: C.textMuted, fontSize: "14px" }}>Manage your PDF templates and send them to signers.</p>
+      </div>
 
-      <p style={{ fontSize: "1.1rem", marginBottom: "24px" }}>
-        Select a template to start a signing session.
-      </p>
+      {loading && <div style={{ color: C.textMuted, padding: "40px 0", textAlign: "center" }}>Loading templates...</div>}
+      {error && <div style={{ color: C.danger, padding: "16px", background: C.dangerBg, borderRadius: "8px" }}>{error}</div>}
 
-      {isLoading ? (
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fafafa",
-            maxWidth: "720px",
-          }}
-        >
-          Loading templates...
+      {!loading && !error && templates.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: C.textMuted }}>
+          <div style={{ fontSize: "40px", marginBottom: "12px" }}>📄</div>
+          <div style={{ fontSize: "16px", fontWeight: 600, color: C.text, marginBottom: "6px" }}>No templates found</div>
+          <div style={{ fontSize: "14px" }}>Upload PDF files to your Google Drive templates folder to get started.</div>
         </div>
-      ) : null}
+      )}
 
-      {!isLoading && error ? (
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #f5c2c7",
-            borderRadius: "8px",
-            background: "#f8d7da",
-            color: "#842029",
-            maxWidth: "720px",
-            marginBottom: "20px",
-          }}
-        >
-          <strong>Could not load templates.</strong>
-          <div style={{ marginTop: "8px" }}>{error}</div>
-        </div>
-      ) : null}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {templates.map((doc) => (
+          <div key={doc.id} style={{
+            background: C.surface, border: `1px solid ${C.border}`, borderRadius: "12px",
+            padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px",
+            transition: "border-color 0.15s"
+          }}>
+            <div style={{
+              width: "40px", height: "40px", background: C.accentGlow,
+              borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "18px", flexShrink: 0
+            }}>📄</div>
 
-      {!isLoading && !error && templates.length === 0 ? (
-        <div
-          style={{
-            padding: "16px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fafafa",
-            maxWidth: "720px",
-          }}
-        >
-          No PDF templates were found in the configured Google Drive folder.
-        </div>
-      ) : null}
-
-      {!isLoading && !error && templates.length > 0 ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "16px",
-            maxWidth: "1100px",
-          }}
-        >
-          {templates.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => openTemplate(t)}
-              style={{
-                textAlign: "left",
-                padding: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "10px",
-                background: "#fff",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  marginBottom: "8px",
-                  wordBreak: "break-word",
-                }}
-              >
-                {t.name}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: "15px", color: C.text, marginBottom: "3px",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {doc.name}
               </div>
+              <div style={{ fontSize: "12px", color: C.textDim, fontFamily: "monospace" }}>{doc.id}</div>
+            </div>
 
-              <div style={{ fontSize: "0.9rem", color: "#555", marginBottom: "6px" }}>
-                ID: {t.id}
+            <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+              <a href={`/admin/documents/${doc.id}/place-fields`} style={{
+                ...btnBase, background: C.accentGlow, color: C.accent,
+                border: `1px solid ${C.border}`, textDecoration: "none", display: "inline-block"
+              }}>
+                Place Fields
+              </a>
+              <button style={{ ...btnBase, background: "#1a2540", color: "#34d399", border: "1px solid #065f46" }}
+                onClick={() => { setSendModal({ doc }); setSignerEmail(""); setSignerName(""); setSendStatus("") }}>
+                ✉️ Send to Signer
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Send to Signer Modal */}
+      {sendModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1000, background: C.modalBg,
+          display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)"
+        }} onClick={(e) => { if (e.target === e.currentTarget) setSendModal(null) }}>
+          <div style={{
+            background: C.surface, borderRadius: "16px", border: `1px solid ${C.border}`,
+            padding: "28px", width: "460px", maxWidth: "95vw",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.6)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: C.text }}>✉️ Send to Signer</h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: C.textMuted, maxWidth: "300px",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {sendModal.doc.name}
+                </p>
               </div>
+              <button onClick={() => setSendModal(null)} style={{
+                background: "transparent", border: "none", color: C.textMuted,
+                fontSize: "22px", cursor: "pointer", padding: "4px 8px"
+              }}>×</button>
+            </div>
 
-              {t.modifiedTime ? (
-                <div style={{ fontSize: "0.9rem", color: "#555", marginBottom: "6px" }}>
-                  Updated: {new Date(t.modifiedTime).toLocaleString()}
+            {sendStatus === "success" ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+                <div style={{ fontSize: "16px", fontWeight: 600, color: C.success, marginBottom: "6px" }}>Email sent!</div>
+                <div style={{ fontSize: "14px", color: C.textMuted, marginBottom: "20px" }}>
+                  {signerName || signerEmail} will receive a signing link shortly.
                 </div>
-              ) : null}
-
-              {t.size ? (
-                <div style={{ fontSize: "0.9rem", color: "#555", marginBottom: "10px" }}>
-                  Size: {formatBytes(Number(t.size))}
-                </div>
-              ) : null}
-
-              <div
-                style={{
-                  marginTop: "12px",
-                  display: "inline-block",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  background: "#111827",
-                  color: "#fff",
-                  fontSize: "0.92rem",
-                  fontWeight: 600,
-                }}
-              >
-                Place fields
+                <button style={{ ...btnBase, background: C.accent, color: "#fff", padding: "10px 24px" }}
+                  onClick={() => setSendModal(null)}>Done</button>
               </div>
-            </button>
-          ))}
+            ) : (
+              <>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ fontSize: "12px", color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Signer Name <span style={{ color: C.textDim }}>(optional)</span>
+                  </label>
+                  <input type="text" value={signerName} onChange={(e) => setSignerName(e.target.value)}
+                    placeholder="e.g. John Smith"
+                    style={{ display: "block", width: "100%", marginTop: "6px", padding: "10px 12px",
+                      background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: "8px",
+                      color: C.text, fontSize: "14px", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ fontSize: "12px", color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Signer Email <span style={{ color: C.danger }}>*</span>
+                  </label>
+                  <input type="email" value={signerEmail} onChange={(e) => setSignerEmail(e.target.value)}
+                    placeholder="signer@example.com"
+                    style={{ display: "block", width: "100%", marginTop: "6px", padding: "10px 12px",
+                      background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: "8px",
+                      color: C.text, fontSize: "14px", boxSizing: "border-box" }} />
+                </div>
+
+                {sendStatus && sendStatus !== "success" && (
+                  <div style={{ marginBottom: "14px", padding: "10px 14px", background: C.dangerBg,
+                    color: C.danger, borderRadius: "8px", fontSize: "13px" }}>
+                    {sendStatus}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button style={{ ...btnBase, background: C.accent, color: "#fff", flex: 1, padding: "11px" }}
+                    onClick={handleSendToSigner} disabled={isSending}>
+                    {isSending ? "Sending..." : "Send Signing Link"}
+                  </button>
+                  <button style={{ ...btnBase, background: "transparent", color: C.textMuted,
+                    border: `1px solid ${C.border}` }}
+                    onClick={() => setSendModal(null)}>Cancel</button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      ) : null}
-    </main>
-  );
-}
-
-function formatBytes(bytes: number) {
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return "Unknown";
-  }
-
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unitIndex = 0;
-
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex += 1;
-  }
-
-  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+      )}
+    </div>
+  )
 }
