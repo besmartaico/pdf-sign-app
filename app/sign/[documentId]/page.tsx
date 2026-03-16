@@ -243,6 +243,18 @@ export default function SignPage() {
   }
 
   async function submitSignedDocument() {
+    // Validate all fields are filled
+    const missingFields = fields.filter(f => {
+      const v = values[f.id]
+      if (!v) return true
+      if (f.type === "signature") return !v.signatureText && !v.signatureImage
+      if (f.type === "text" || f.type === "date") return !v.value
+      return false
+    })
+    if (missingFields.length > 0) {
+      setSubmitMessage(`Please fill in all fields before completing. Missing: ${missingFields.map(f => f.label).join(", ")}`)
+      return
+    }
     setSubmitMessage("")
     setSavedFileLink("")
     setSavedFileName("")
@@ -257,7 +269,7 @@ export default function SignPage() {
       })
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.error || "Failed to save signed document")
-      setSubmitMessage(result.fileId ? "Your document has been signed and saved!" : "Your document has been signed successfully!")
+      setSubmitMessage(result.fileId ? "✅ Document signed and saved to Drive!" : "✅ Document signed successfully!")
       setSavedFileLink(result.webViewLink || "")
       setSavedFileName(result.fileName || "")
       setSignedPdfBase64(result.signedPdfBase64 || "")
@@ -307,9 +319,9 @@ export default function SignPage() {
       {submitMessage && (
         <div style={{
           marginBottom: "16px", padding: "16px 20px", borderRadius: "10px",
-          background: signedPdfBase64 ? C.successBg : C.dangerBg,
-          color: signedPdfBase64 ? C.success : C.danger,
-          border: `1px solid ${signedPdfBase64 ? C.success : C.danger}40`,
+          background: signedPdfBase64 ? C.successBg : submitMessage.startsWith("Please fill") ? C.warningBg : C.dangerBg,
+          color: signedPdfBase64 ? C.success : submitMessage.startsWith("Please fill") ? C.warning : C.danger,
+          border: `1px solid ${(signedPdfBase64 ? C.success : submitMessage.startsWith("Please fill") ? C.warning : C.danger)}40`,
           fontSize: "14px"
         }}>
           <div style={{ marginBottom: signedPdfBase64 ? "12px" : 0 }}>{submitMessage}</div>
