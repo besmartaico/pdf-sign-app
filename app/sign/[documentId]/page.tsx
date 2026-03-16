@@ -372,8 +372,8 @@ export default function SignPage() {
                   ))}
                 </div>
 
-                {/* Name input */}
-                <div style={{ marginBottom: "16px" }}>
+                {/* Name input — only shown for typed mode */}
+                {signatureMode === "typed" && <div style={{ marginBottom: "16px" }}>
                   <label style={{ fontSize: "12px", color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Your Name</label>
                   <input type="text" value={signatureText}
                     onChange={(e) => setSignatureText(e.target.value)}
@@ -383,10 +383,10 @@ export default function SignPage() {
                       background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: "8px",
                       color: C.text, fontSize: "14px", boxSizing: "border-box"
                     }} />
-                </div>
+                </div>}
 
-                {/* Style selector */}
-                <div style={{ marginBottom: "16px" }}>
+                {/* Style selector — only shown for typed mode */}
+                {signatureMode === "typed" && <div style={{ marginBottom: "16px" }}>
                   <label style={{ fontSize: "12px", color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Style</label>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "6px", marginTop: "8px" }}>
                     {signatureStyleOptions.map((opt) => (
@@ -401,10 +401,10 @@ export default function SignPage() {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div>}
 
-                {/* Font picker */}
-                <div style={{ marginBottom: "16px" }}>
+                {/* Font picker — only shown for typed mode */}
+                {signatureMode === "typed" && <div style={{ marginBottom: "16px" }}>
                   <label style={{ fontSize: "12px", color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Font</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
                     {signatureFontOptions.map((font) => (
@@ -425,7 +425,7 @@ export default function SignPage() {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div>}
 
                 {/* Typed preview */}
                 {signatureMode === "typed" && (
