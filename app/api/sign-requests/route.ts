@@ -37,6 +37,8 @@ type RequestBody = {
   documentId: string
   fields: PdfField[]
   values: Record<string, FilledFieldValue>
+  signerName?: string
+  signerEmail?: string
 }
 
 const VIEWER_PAGE_WIDTH = 800
@@ -56,6 +58,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as RequestBody
+    const signerName = body.signerName?.trim() || ""
+    const signerEmail = body.signerEmail?.trim() || ""
 
     if (!body.documentId) {
       return NextResponse.json(
@@ -210,9 +214,12 @@ export async function POST(req: NextRequest) {
 
     const originalName = originalMetadata.name || "document.pdf"
     const safeBaseName = stripPdfExtension(originalName)
-    const signedFileName = `${safeBaseName} - Signed ${formatTimestampForFileName(
-      new Date()
-    )}.pdf`
+    const let signerPart = signerName
+      ? `_${signerName.replace(/[^a-zA-Z0-9]/g, "-")}`
+      : signerEmail
+      ? `_${signerEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "-")}`
+      : ""
+    signedFileName = `${safeBaseName} - Signed ${formatTimestampForFileName(new Date())}${signerPart}.pdf`
 
     const uploaded = await uploadBufferToDriveWithServiceAccount({
       buffer: Buffer.from(signedPdfBytes),
@@ -263,7 +270,9 @@ export async function POST(req: NextRequest) {
       webViewLink: uploaded.webViewLink,
       folderName: folderMetadata.name || "",
       signedPdfBase64: Buffer.from(signedPdfBytes).toString("base64"),
-      signedFileName
+      signedFileName,
+      signerName,
+      signerEmail
     })
   } catch (error: unknown) {
     console.error("Failed to generate signed PDF:", error)
