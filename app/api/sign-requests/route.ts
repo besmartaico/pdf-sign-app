@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
 
     const originalName = originalMetadata.name || "document.pdf"
     const safeBaseName = stripPdfExtension(originalName)
-    const let signerPart = signerName
+    const signerPart = signerName
       ? `_${signerName.replace(/[^a-zA-Z0-9]/g, "-")}`
       : signerEmail
       ? `_${signerEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "-")}`
