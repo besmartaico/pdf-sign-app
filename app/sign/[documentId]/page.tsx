@@ -65,6 +65,8 @@ const C = {
   successBg: "rgba(34,197,94,0.1)",
   danger: "#ef4444",
   dangerBg: "rgba(239,68,68,0.1)",
+  warning: "#f59e0b",
+  warningBg: "rgba(245,158,11,0.1)",
   inputBg: "#0f172a",
   modalBg: "rgba(0,0,0,0.75)"
 }
