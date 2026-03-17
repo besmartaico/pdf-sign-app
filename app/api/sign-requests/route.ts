@@ -214,12 +214,12 @@ export async function POST(req: NextRequest) {
 
     const originalName = originalMetadata.name || "document.pdf"
     const safeBaseName = stripPdfExtension(originalName)
-    const signerPart = signerName
-      ? `_${signerName.replace(/[^a-zA-Z0-9]/g, "-")}`
-      : signerEmail
-      ? `_${signerEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "-")}`
-      : ""
-    const signedFileName = `${safeBaseName} - Signed ${formatTimestampForFileName(new Date())}${signerPart}.pdf`
+    // Format: formName_clientName_clientEmail_date
+    const safeName = signerName ? signerName.replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/ +/g, "_") : ""
+    const safeEmail = signerEmail ? signerEmail.replace(/[^a-zA-Z0-9@._-]/g, "").replace(/@/g, "_at_") : ""
+    const safeDate = formatTimestampForFileName(new Date())
+    const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
+    const signedFileName = nameParts.join("_") + ".pdf"
 
     const uploaded = await uploadBufferToDriveWithServiceAccount({
       buffer: Buffer.from(signedPdfBytes),
