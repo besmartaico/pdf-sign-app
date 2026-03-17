@@ -75,6 +75,8 @@ export default function SignPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const documentId = params.documentId as string
+  const signerName = searchParams.get("name") || ""
+  const signerEmail = searchParams.get("email") || ""
   const fileUrl = `/api/templates/${documentId}`
   const storageKey = `template-fields-${documentId}`
   const valuesStorageKey = `template-field-values-${documentId}`
@@ -271,11 +273,17 @@ export default function SignPage() {
       })
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.error || "Failed to save signed document")
-      setSubmitMessage(result.fileId ? "✅ Document signed and saved to Drive!" : "✅ Document signed successfully!")
+      setSubmitMessage("✅ Your document has been signed!")
       setSavedFileLink(result.webViewLink || "")
       setSavedFileName(result.fileName || "")
       setSignedPdfBase64(result.signedPdfBase64 || "")
-      setSignedPdfFileName(result.signedFileName || result.fileName || "signed-document.pdf")
+      // Build filename: FormName_SignerName_Email_Date
+      const formBase = (result.fileName || "document").replace(/\s*-\s*Signed\s*.*$/i, "").trim()
+      const today = new Date().toISOString().slice(0,10)
+      const namePart = signerName ? signerName.replace(/[^a-zA-Z0-9]/g, "_") : ""
+      const emailPart = signerEmail ? signerEmail.replace(/[^a-zA-Z0-9@.]/g, "_") : ""
+      const parts = [formBase, namePart, emailPart, today].filter(Boolean)
+      setSignedPdfFileName(parts.join("_") + ".pdf")
     } catch (error) {
       setSubmitMessage(error instanceof Error ? error.message : "Failed to save signed document")
     } finally {
@@ -313,9 +321,26 @@ export default function SignPage() {
           Fields filled: <strong style={{ color: C.text }}>{Object.keys(values).length}</strong> / <strong style={{ color: C.text }}>{fields.length}</strong>
         </span>
         <div style={{ flex: 1 }} />
-        <button style={primaryBtn} onClick={submitSignedDocument} disabled={isSubmittingSignedDocument}>
-          {isSubmittingSignedDocument ? "Completing..." : "✅ Complete Signed PDF"}
-        </button>
+        {signedPdfBase64 ? (
+          <button
+            style={primaryBtn}
+            onClick={() => {
+              const bytes = Uint8Array.from(atob(signedPdfBase64), c => c.charCodeAt(0))
+              const blob = new Blob([bytes], { type: "application/pdf" })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement("a")
+              a.href = url
+              a.download = signedPdfFileName
+              a.click()
+              URL.revokeObjectURL(url)
+            }}>
+            ⬇️ Download Signed PDF
+          </button>
+        ) : (
+          <button style={primaryBtn} onClick={submitSignedDocument} disabled={isSubmittingSignedDocument}>
+            {isSubmittingSignedDocument ? "Completing..." : "✅ Complete Signing"}
+          </button>
+        )}
       </div>
 
       {submitMessage && (
@@ -326,28 +351,7 @@ export default function SignPage() {
           border: `1px solid ${(signedPdfBase64 ? C.success : submitMessage.startsWith("Please fill") ? C.warning : C.danger)}40`,
           fontSize: "14px"
         }}>
-          <div style={{ marginBottom: signedPdfBase64 ? "12px" : 0 }}>{submitMessage}</div>
-          {signedPdfBase64 && (
-            <button
-              onClick={() => {
-                const bytes = Uint8Array.from(atob(signedPdfBase64), c => c.charCodeAt(0))
-                const blob = new Blob([bytes], { type: "application/pdf" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = signedPdfFileName
-                a.click()
-                URL.revokeObjectURL(url)
-              }}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                padding: "10px 20px", borderRadius: "8px", border: "none",
-                background: C.success, color: "#fff", fontWeight: 700,
-                fontSize: "14px", cursor: "pointer"
-              }}>
-              ⬇️ Download Signed PDF
-            </button>
-          )}
+          <div>{submitMessage}</div>
         </div>
       )}
 
