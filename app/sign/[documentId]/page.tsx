@@ -100,6 +100,8 @@ export default function SignPage() {
   const [savedFileName, setSavedFileName] = useState("")
   const [signedPdfBase64, setSignedPdfBase64] = useState("")
   const [signedPdfFileName, setSignedPdfFileName] = useState("")
+  const [signerName, setSignerName] = useState("")
+  const [signerEmail, setSignerEmail] = useState("")
   const [isLoaded, setIsLoaded] = useState(false)
 
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -269,7 +271,7 @@ export default function SignPage() {
       const response = await fetch("/api/sign-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId, fields, values })
+        body: JSON.stringify({ documentId, fields, values, signerName, signerEmail })
       })
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.error || "Failed to save signed document")
