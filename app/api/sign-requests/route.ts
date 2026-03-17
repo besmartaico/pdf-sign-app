@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
       : signerEmail
       ? `_${signerEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "-")}`
       : ""
-    signedFileName = `${safeBaseName} - Signed ${formatTimestampForFileName(new Date())}${signerPart}.pdf`
+    const signedFileName = `${safeBaseName} - Signed ${formatTimestampForFileName(new Date())}${signerPart}.pdf`
 
     const uploaded = await uploadBufferToDriveWithServiceAccount({
       buffer: Buffer.from(signedPdfBytes),
