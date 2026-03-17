@@ -100,8 +100,6 @@ export default function SignPage() {
   const [savedFileName, setSavedFileName] = useState("")
   const [signedPdfBase64, setSignedPdfBase64] = useState("")
   const [signedPdfFileName, setSignedPdfFileName] = useState("")
-  const [signerName, setSignerName] = useState("")
-  const [signerEmail, setSignerEmail] = useState("")
   const [isLoaded, setIsLoaded] = useState(false)
 
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null)
