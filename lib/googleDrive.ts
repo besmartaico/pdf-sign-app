@@ -142,3 +142,26 @@ export async function deleteFileWithServiceAccount({ fileId }: { fileId: string 
   const drive = google.drive({ version: "v3", auth })
   await drive.files.delete({ fileId })
 }
+
+export async function updateFileMetadataWithServiceAccount({
+  fileId,
+  appProperties,
+}: {
+  fileId: string
+  appProperties: Record<string, string>
+}) {
+  const drive = getServiceAccountDriveClient()
+  await drive.files.update({
+    fileId,
+    requestBody: { appProperties },
+  })
+}
+
+export async function getFileAppPropertiesWithServiceAccount(fileId: string): Promise<Record<string, string>> {
+  const drive = getServiceAccountDriveClient()
+  const res = await drive.files.get({
+    fileId,
+    fields: "appProperties",
+  })
+  return (res.data.appProperties as Record<string, string>) || {}
+}
