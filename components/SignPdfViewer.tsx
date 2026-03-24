@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
@@ -40,6 +40,20 @@ export default function SignPdfViewer({
   onFieldClick
 }: SignPdfViewerProps) {
   const [numPages, setNumPages] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(800)
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    if (containerRef.current) observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   function onDocumentLoadSuccess({
     numPages
@@ -50,23 +64,24 @@ export default function SignPdfViewer({
   }
 
   return (
-    <div>
+    <div ref={containerRef} style={{ width: "100%", maxWidth: "800px", margin: "0 auto" }}>
       <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess}>
         {Array.from({ length: numPages }, (_, index) => {
           const pageNumber = index + 1
+          const scale = containerWidth / 800
 
           return (
             <div
               key={`page_${pageNumber}`}
               style={{
                 position: "relative",
-                width: "800px",
+                width: "100%",
                 marginBottom: "20px",
                 border: "1px solid #ddd",
                 background: "#fff"
               }}
             >
-              <Page pageNumber={pageNumber} width={800} />
+              <Page pageNumber={pageNumber} width={containerWidth} />
 
               {fields
                 .filter((field) => field.page === pageNumber)
@@ -82,10 +97,10 @@ export default function SignPdfViewer({
                       onClick={() => onFieldClick(field)}
                       style={{
                         position: "absolute",
-                        left: `${field.x}px`,
-                        top: `${field.y}px`,
-                        width: `${field.width}px`,
-                        height: `${field.height}px`,
+                        left: `${field.x * scale}px`,
+                        top: `${field.y * scale}px`,
+                        width: `${field.width * scale}px`,
+                        height: `${field.height * scale}px`,
                         border: "2px solid #16a34a",
                         backgroundColor: "rgba(22, 163, 74, 0.12)",
                         borderRadius: "6px",
