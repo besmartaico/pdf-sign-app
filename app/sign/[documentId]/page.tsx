@@ -140,11 +140,11 @@ export default function SignPage() {
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-    ctx.fillStyle = "#0f172a"
+    ctx.fillStyle = "#ffffff"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    ctx.strokeStyle = "#60a5fa"
+    ctx.strokeStyle = "#000000"
     ctx.lineWidth = 2.4
   }, [])
 
@@ -457,7 +457,7 @@ export default function SignPage() {
                         }}>
                         <div style={{ fontSize: "11px", color: C.textDim, marginBottom: "2px" }}>{font.label}</div>
                         <div style={{
-                          fontFamily: font.value, fontSize: "26px", color: "#60a5fa", lineHeight: 1.1,
+                          fontFamily: font.value, fontSize: "26px", color: "#000000", lineHeight: 1.1,
                           fontStyle: signatureStyle === "bold" ? "normal" : "italic",
                           fontWeight: signatureStyle === "bold" ? 700 : 500
                         }}>
@@ -475,7 +475,7 @@ export default function SignPage() {
                     minHeight: "90px", display: "flex", alignItems: "center", justifyContent: "center",
                     background: C.inputBg, marginBottom: "16px"
                   }}>
-                    <span style={{ ...typedPreviewStyle, color: "#60a5fa" }}>
+                    <span style={{ ...typedPreviewStyle, color: "#000000" }}>
                       {typedPreviewText || "Signature Preview"}
                     </span>
                   </div>
@@ -571,7 +571,7 @@ function drawImageOnCanvas(imageSrc: string, canvas: HTMLCanvasElement | null) {
   if (!ctx) return
   const image = new Image()
   image.onload = () => {
-    ctx.fillStyle = "#0f172a"
+    ctx.fillStyle = "#ffffff"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     const scale = Math.min(canvas.width / image.width, canvas.height / image.height)
     const w = image.width * scale, h = image.height * scale
