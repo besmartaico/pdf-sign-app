@@ -5,13 +5,12 @@ import {
 } from "../../../../../lib/googleDrive"
 
 // GET /api/documents/[documentId]/fields
-// Returns the fields stored in Google Drive appProperties for this document
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { documentId: string } }
+  { params }: { params: Promise<{ documentId: string }> }
 ) {
   try {
-    const { documentId } = params
+    const { documentId } = await params
     const props = await getFileAppPropertiesWithServiceAccount(documentId)
     const fieldsJson = props["pdfFields"] || "[]"
     const fields = JSON.parse(fieldsJson)
@@ -23,17 +22,14 @@ export async function GET(
 }
 
 // POST /api/documents/[documentId]/fields
-// Saves fields to Google Drive appProperties for this document
 export async function POST(
   req: NextRequest,
-  { params }: { params: { documentId: string } }
+  { params }: { params: Promise<{ documentId: string }> }
 ) {
   try {
-    const { documentId } = params
+    const { documentId } = await params
     const { fields } = await req.json()
     const fieldsJson = JSON.stringify(fields)
-    // Google Drive appProperties values have a 124-byte limit per key
-    // We chunk if needed, but typically fields fit in one key
     await updateFileMetadataWithServiceAccount({
       fileId: documentId,
       appProperties: { pdfFields: fieldsJson },
