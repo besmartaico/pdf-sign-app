@@ -114,7 +114,7 @@ export default function AdminDocumentsPage() {
         {templates.map((doc) => (
           <div key={doc.id} style={{
             background: C.surface, border: `1px solid ${C.border}`, borderRadius: "12px",
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px"
+            padding: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap"
           }}>
             <div style={{
               width: "40px", height: "40px", background: C.accentGlow,
@@ -127,14 +127,14 @@ export default function AdminDocumentsPage() {
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {doc.name}
               </div>
-              <div style={{ fontSize: "12px", color: C.textDim, fontFamily: "monospace" }}>{doc.id}</div>
+
             </div>
 
-            <div style={{ display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "6px", flexShrink: 0, alignItems: "center", flexWrap: "wrap" }}>
               <a href={`/admin/documents/${doc.id}/place-fields`} style={{
                 ...btnBase, background: C.accentGlow, color: C.accent, border: `1px solid ${C.border}`
               }}>
-                ✏️ Place Fields
+                ✏️ Fields
               </a>
               <button style={{ ...btnBase, background: "rgba(34,197,94,0.1)", color: "#34d399", border: "1px solid #065f46" }}
                 onClick={() => setPreviewModal({ doc })}>
