@@ -221,12 +221,20 @@ export async function POST(req: NextRequest) {
     const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
-    const uploaded = await uploadBufferToDriveWithServiceAccount({
-      buffer: Buffer.from(signedPdfBytes),
-      fileName: signedFileName,
-      folderId: targetFolderId,
-      mimeType: "application/pdf"
-    })
+    // Try Drive upload — wrapped in try/catch since service accounts can't
+    // write to personal Google Drive folders (no storage quota)
+    let uploaded: { id?: string; webViewLink?: string } | null = null
+    try {
+      uploaded = await uploadBufferToDriveWithServiceAccount({
+        buffer: Buffer.from(signedPdfBytes),
+        fileName: signedFileName,
+        folderId: targetFolderId,
+        mimeType: "application/pdf"
+      })
+    } catch (uploadErr) {
+      console.warn("Drive upload failed:", uploadErr)
+      // PDF will be sent as email attachment below
+    }
 
     // Send notification email to admin
     const resendApiKey = process.env.RESEND_API_KEY
@@ -242,6 +250,13 @@ export async function POST(req: NextRequest) {
           from: fromEmail,
           to: [adminEmail],
           subject: `✅ Document Signed: ${originalMetadata.name || "Document"}`,
+          attachments: [
+            {
+              filename: signedFileName,
+              content: Buffer.from(signedPdfBytes).toString("base64"),
+              content_type: "application/pdf",
+            },
+          ],
           html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#111827;border-radius:12px;border:1px solid #1e3a5f;overflow:hidden;">
             <div style="background:linear-gradient(135deg,#166534,#16a34a);padding:24px 32px;">
               <h2 style="margin:0;color:#fff;font-size:20px;">✅ Document Signed</h2>
