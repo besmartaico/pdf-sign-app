@@ -58,20 +58,31 @@ export async function uploadBufferToDriveWithServiceAccount(params: {
 }) {
   const drive = getServiceAccountDriveClient()
 
-  const response = await drive.files.create({
+  // Step 1: Upload without a parent folder to avoid personal-drive quota errors
+  const uploadResponse = await drive.files.create({
     requestBody: {
       name: params.fileName,
-      parents: [params.folderId]
     },
     media: {
       mimeType: params.mimeType || "application/pdf",
       body: Readable.from(params.buffer)
     },
     fields: "id,name,webViewLink",
-    supportsAllDrives: true
+    supportsAllDrives: true,
   })
 
-  return response.data
+  const fileId = uploadResponse.data.id!
+
+  // Step 2: Move the file into the target folder using files.update
+  // This works for personal drives where direct upload with parents fails
+  const moveResponse = await drive.files.update({
+    fileId,
+    addParents: params.folderId,
+    fields: "id,name,webViewLink",
+    supportsAllDrives: true,
+  })
+
+  return moveResponse.data
 }
 
 export async function downloadFileFromGoogleDriveWithServiceAccount(params: {
