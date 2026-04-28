@@ -6,6 +6,7 @@ import {
   getGoogleDriveFolderMetadataWithServiceAccount,
   uploadBufferToDriveWithServiceAccount
 } from "../../../lib/googleDrive"
+import { put } from "@vercel/blob"
 
 type PdfFieldType = "signature" | "text" | "date"
 
@@ -221,12 +222,12 @@ export async function POST(req: NextRequest) {
     const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
-    const uploaded = await uploadBufferToDriveWithServiceAccount({
-      buffer: Buffer.from(signedPdfBytes),
-      fileName: signedFileName,
-      folderId: targetFolderId,
-      mimeType: "application/pdf"
+    // Upload signed PDF to Vercel Blob storage
+    const blob = await put(signedFileName, Buffer.from(signedPdfBytes), {
+      access: "private",
+      contentType: "application/pdf",
     })
+    const uploaded = { id: blob.url, name: signedFileName, webViewLink: blob.url }
 
     // Send notification email to admin
     const resendApiKey = process.env.RESEND_API_KEY
