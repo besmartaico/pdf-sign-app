@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
       signer_name: signerName || null,
       signer_email: signerEmail || null,
       file_path: filePath,
-      file_url: supabaseFileUrl,
+      file_url: supabaseFileUrl
     }).then(({ error }) => { if (error) console.error("DB insert error:", error) })
 
     // Send notification email to admin
@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
             {
               filename: signedFileName,
               content: Buffer.from(signedPdfBytes).toString("base64"),
-              content_type: "application/pdf",
+              content_type: "application/pdf"
             },
           ],
           html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#111827;border-radius:12px;border:1px solid #1e3a5f;overflow:hidden;">
@@ -285,7 +285,7 @@ export async function POST(req: NextRequest) {
                 <div style="color:#64748b;font-size:12px;margin-top:10px;margin-bottom:4px;">Time</div>
                 <div style="color:#e2e8f0;">${now}</div>
               </div>
-              ${uploaded.webViewLink ? `<a href="${uploaded.webViewLink}" style="display:inline-block;background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Google Drive</a>` : ""}
+              ${supabaseFileUrl ? `<a href="${supabaseFileUrl}" style="display:inline-block;background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Google Drive</a>` : ""}
             </div>
           </div>`
         })
