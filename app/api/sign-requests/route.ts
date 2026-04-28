@@ -6,6 +6,7 @@ import {
   getGoogleDriveFolderMetadataWithServiceAccount,
   uploadBufferToDriveWithServiceAccount
 } from "../../../lib/googleDrive"
+import { supabaseAdmin } from "../../../lib/supabase"
 
 type PdfFieldType = "signature" | "text" | "date"
 
@@ -221,20 +222,33 @@ export async function POST(req: NextRequest) {
     const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
-    // Try Drive upload — wrapped in try/catch since service accounts can't
-    // write to personal Google Drive folders (no storage quota)
-    let uploaded: { id?: string; webViewLink?: string } | null = null
-    try {
-      uploaded = await uploadBufferToDriveWithServiceAccount({
-        buffer: Buffer.from(signedPdfBytes),
-        fileName: signedFileName,
-        folderId: targetFolderId,
-        mimeType: "application/pdf"
-      })
-    } catch (uploadErr) {
-      console.warn("Drive upload failed:", uploadErr)
-      // PDF will be sent as email attachment below
+    // Upload to Supabase Storage
+    const pdfBuffer = Buffer.from(signedPdfBytes)
+    const filePath = `${documentId}/${signedFileName}`
+    let supabaseFileUrl: string | null = null
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("signed-pdfs")
+      .upload(filePath, pdfBuffer, { contentType: "application/pdf", upsert: true })
+
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError)
+    } else {
+      const { data: urlData } = await supabaseAdmin.storage
+        .from("signed-pdfs")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
+      supabaseFileUrl = urlData?.signedUrl || null
     }
+
+    // Save record to signed_documents table
+    await supabaseAdmin.from("signed_documents").insert({
+      document_id: documentId,
+      document_name: originalMetadata.name || signedFileName,
+      signer_name: signerName || null,
+      signer_email: signerEmail || null,
+      file_path: filePath,
+      file_url: supabaseFileUrl,
+    }).then(({ error }) => { if (error) console.error("DB insert error:", error) })
 
     // Send notification email to admin
     const resendApiKey = process.env.RESEND_API_KEY
@@ -280,9 +294,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      fileId: uploaded.id,
-      fileName: uploaded.name,
-      webViewLink: uploaded.webViewLink,
+      fileUrl: supabaseFileUrl,
+      fileName: signedFileName,
       folderName: folderMetadata.name || "",
       signedPdfBase64: Buffer.from(signedPdfBytes).toString("base64"),
       signedFileName,
