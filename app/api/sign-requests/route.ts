@@ -6,7 +6,6 @@ import {
   getGoogleDriveFolderMetadataWithServiceAccount,
   uploadBufferToDriveWithServiceAccount
 } from "../../../lib/googleDrive"
-import { supabaseAdmin } from "../../../lib/supabase"
 
 type PdfFieldType = "signature" | "text" | "date"
 
@@ -222,33 +221,12 @@ export async function POST(req: NextRequest) {
     const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
-    // Upload to Supabase Storage
-    const pdfBuffer = Buffer.from(signedPdfBytes)
-    const filePath = `${body.documentId}/${signedFileName}`
-    let supabaseFileUrl: string | null = null
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("signed-pdfs")
-      .upload(filePath, pdfBuffer, { contentType: "application/pdf", upsert: true })
-
-    if (uploadError) {
-      console.error("Supabase upload error:", uploadError)
-    } else {
-      const { data: urlData } = await supabaseAdmin.storage
-        .from("signed-pdfs")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
-      supabaseFileUrl = urlData?.signedUrl || null
-    }
-
-    // Save record to signed_documents table
-    await supabaseAdmin.from("signed_documents").insert({
-      document_id: body.documentId,
-      document_name: originalMetadata.name || signedFileName,
-      signer_name: signerName || null,
-      signer_email: signerEmail || null,
-      file_path: filePath,
-      file_url: supabaseFileUrl
-    }).then(({ error }) => { if (error) console.error("DB insert error:", error) })
+    const uploaded = await uploadBufferToDriveWithServiceAccount({
+      buffer: Buffer.from(signedPdfBytes),
+      fileName: signedFileName,
+      folderId: targetFolderId,
+      mimeType: "application/pdf"
+    })
 
     // Send notification email to admin
     const resendApiKey = process.env.RESEND_API_KEY
@@ -264,13 +242,6 @@ export async function POST(req: NextRequest) {
           from: fromEmail,
           to: [adminEmail],
           subject: `✅ Document Signed: ${originalMetadata.name || "Document"}`,
-          attachments: [
-            {
-              filename: signedFileName,
-              content: Buffer.from(signedPdfBytes).toString("base64"),
-              content_type: "application/pdf"
-            },
-          ],
           html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#111827;border-radius:12px;border:1px solid #1e3a5f;overflow:hidden;">
             <div style="background:linear-gradient(135deg,#166534,#16a34a);padding:24px 32px;">
               <h2 style="margin:0;color:#fff;font-size:20px;">✅ Document Signed</h2>
@@ -285,7 +256,7 @@ export async function POST(req: NextRequest) {
                 <div style="color:#64748b;font-size:12px;margin-top:10px;margin-bottom:4px;">Time</div>
                 <div style="color:#e2e8f0;">${now}</div>
               </div>
-              ${supabaseFileUrl ? `<a href="${supabaseFileUrl}" style="display:inline-block;background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Google Drive</a>` : ""}
+              ${uploaded.webViewLink ? `<a href="${uploaded.webViewLink}" style="display:inline-block;background:#1d4ed8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View in Google Drive</a>` : ""}
             </div>
           </div>`
         })
@@ -294,8 +265,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      fileUrl: supabaseFileUrl,
-      fileName: signedFileName,
+      fileId: uploaded.id,
+      fileName: uploaded.name,
+      webViewLink: uploaded.webViewLink,
       folderName: folderMetadata.name || "",
       signedPdfBase64: Buffer.from(signedPdfBytes).toString("base64"),
       signedFileName,
