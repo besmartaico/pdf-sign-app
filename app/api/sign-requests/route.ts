@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
 
     // Upload to Supabase Storage
     const pdfBuffer = Buffer.from(signedPdfBytes)
-    const filePath = `${documentId}/${signedFileName}`
+    const filePath = `${body.documentId}/${signedFileName}`
     let supabaseFileUrl: string | null = null
 
     const { error: uploadError } = await supabaseAdmin.storage
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
 
     // Save record to signed_documents table
     await supabaseAdmin.from("signed_documents").insert({
-      document_id: documentId,
+      document_id: body.documentId,
       document_name: originalMetadata.name || signedFileName,
       signer_name: signerName || null,
       signer_email: signerEmail || null,
