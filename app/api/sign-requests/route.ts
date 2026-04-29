@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
 
     // Upload signed PDF to Vercel Blob storage
     const blob = await put(signedFileName, Buffer.from(signedPdfBytes), {
-      access: "private",
+      access: "public",
       contentType: "application/pdf",
     })
     const uploaded = { id: blob.url, name: signedFileName, webViewLink: blob.url }
