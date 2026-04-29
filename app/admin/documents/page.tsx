@@ -98,7 +98,13 @@ export default function AdminDocumentsPage() {
   return (
     <div style={{ color: C.text }}>
       <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: C.text }}>Documents</h1>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"10px" }}>
+          <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: C.text }}>Documents</h1>
+          <div style={{ display:"flex",gap:"8px",flexWrap:"wrap" }}>
+            <a href="/admin/signed-pdfs" style={{ background:C.surface,border:`1px solid ${C.border}`,color:C.textMuted,textDecoration:"none",padding:"7px 14px",borderRadius:"7px",fontSize:"13px",fontWeight:500 }}>📥 Signed PDFs</a>
+            <a href="/admin/users" style={{ background:C.surface,border:`1px solid ${C.border}`,color:C.textMuted,textDecoration:"none",padding:"7px 14px",borderRadius:"7px",fontSize:"13px",fontWeight:500 }}>👥 Users</a>
+          </div>
+        </div>
         <p style={{ margin: "6px 0 0", color: C.textMuted, fontSize: "14px" }}>Manage your PDF templates and send them to signers.</p>
       </div>
 
