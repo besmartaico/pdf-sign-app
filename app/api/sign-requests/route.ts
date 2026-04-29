@@ -219,7 +219,16 @@ export async function POST(req: NextRequest) {
     const safeName = signerName ? signerName.replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/ +/g, "_") : ""
     const safeEmail = signerEmail ? signerEmail.replace(/[^a-zA-Z0-9@._-]/g, "").replace(/@/g, "_at_") : ""
     const safeDate = formatTimestampForFileName(new Date())
-    const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
+    // Collect text field values to include in filename
+    const textFieldValues = body.fields
+      .filter(f => f.type === "text")
+      .map(f => body.values[f.id]?.value || "")
+      .filter(Boolean)
+      .join("_")
+      .replace(/[^a-zA-Z0-9_]/g, "_")
+      .replace(/_+/g, "_")
+      .slice(0, 60)
+    const nameParts = [safeBaseName, textFieldValues, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
     // Upload signed PDF to Vercel Blob (public store)
