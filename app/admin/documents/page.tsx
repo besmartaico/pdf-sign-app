@@ -29,6 +29,7 @@ export default function AdminDocumentsPage() {
 
   useEffect(() => {
     loadTemplates()
+    fetchBlobs()
   }, [])
 
   function loadTemplates() {
@@ -43,6 +44,15 @@ export default function AdminDocumentsPage() {
         setError("Failed to load templates.")
         setLoading(false)
       })
+  }
+
+  function fetchBlobs() {
+    setBlobsLoading(true)
+    fetch("/api/admin/signed-pdfs")
+      .then(r => r.json())
+      .then(data => setBlobs(data.blobs || []))
+      .catch(e => console.error(e))
+      .finally(() => setBlobsLoading(false))
   }
 
   async function handleDelete(doc: Template) {
