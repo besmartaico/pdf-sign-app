@@ -169,7 +169,7 @@ function FieldDisplay({
         <span
           style={{
             ...signatureStyle,
-            color: "#166534",
+            color: "#000000",
             whiteSpace: "nowrap",
             display: "inline-block",
             maxWidth: "100%",
@@ -187,7 +187,7 @@ function FieldDisplay({
       <span
         style={{
           fontSize: "16px",
-          color: "#166534",
+          color: "#000000",
           whiteSpace: "nowrap",
           pointerEvents: "none"
         }}
@@ -202,7 +202,7 @@ function FieldDisplay({
       style={{
         fontSize: "14px",
         fontWeight: 600,
-        color: "#166534",
+        color: "#000000",
         pointerEvents: "none"
       }}
     >
