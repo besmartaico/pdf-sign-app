@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
     const nameParts = [safeBaseName, safeName, safeEmail, safeDate].filter(Boolean)
     const signedFileName = nameParts.join("_") + ".pdf"
 
-    // Upload signed PDF to Vercel Blob storage
+    // Upload signed PDF to Vercel Blob (public store)
     const blob = await put(signedFileName, Buffer.from(signedPdfBytes), {
       access: "public",
       contentType: "application/pdf",
