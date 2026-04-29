@@ -120,10 +120,23 @@ export default function SignPage() {
     // Fall back to localStorage (admin's own browser)
     const savedFields = localStorage.getItem(storageKey)
     const savedValues = localStorage.getItem(valuesStorageKey)
-    if (savedFields) setFields(JSON.parse(savedFields) as PdfField[])
     if (savedValues) setValues(JSON.parse(savedValues) as Record<string, FilledFieldValue>)
-    setIsLoaded(true)
-  }, [storageKey, valuesStorageKey, searchParams])
+    if (savedFields) {
+      setFields(JSON.parse(savedFields) as PdfField[])
+      setIsLoaded(true)
+      return
+    }
+    // Final fallback: load fields from server (Google Drive appProperties)
+    fetch(`/api/documents/${documentId}/fields`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data.fields) && data.fields.length > 0) {
+          setFields(data.fields as PdfField[])
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoaded(true))
+  }, [storageKey, valuesStorageKey, searchParams, documentId])
 
   useEffect(() => {
     if (!isLoaded) return
