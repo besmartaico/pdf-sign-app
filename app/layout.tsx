@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "health.BeSmartAI",
+  title: "docs.BeSmartAI",
   description: "Document signing powered by BeSmartAI",
   icons: {
     icon: "https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
