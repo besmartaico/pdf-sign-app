@@ -43,10 +43,10 @@ export default function RootLayout({
             <img
               src="https://images.squarespace-cdn.com/content/v1/69270d3f55d63e364a913bdd/68b6d2d1-03ce-44bb-88c2-85618d6a7eff/BeSmartAI.png?format=100w"
               alt="BeSmartAI Logo"
-              style={{ height: "40px", width: "auto", objectFit: "contain" }}
+              style={{ height: "40px", width: "auto", objectFit: "contain", background: "#ffffff", padding: "4px 6px", borderRadius: "6px" }}
             />
             <span style={{ fontWeight: 700, fontSize: "16px", color: "#f1f5f9", letterSpacing: "-0.3px" }}>
-              health.<span style={{ color: "#3b82f6" }}>BeSmartAI</span>
+              docs.<span style={{ color: "#3b82f6" }}>BeSmartAI</span>
             </span>
           </a>
           <div style={{ display: "flex", gap: "24px" }}>
