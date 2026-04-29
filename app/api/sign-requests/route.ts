@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
           y: textY,
           size: fontSize,
           font,
-          color: rgb(0.08, 0.33, 0.18)
+          color: rgb(0, 0, 0)
         })
 
         continue
@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
           y: pdfY + Math.max(2, (pdfHeight - fontSize) / 2),
           size: fontSize,
           font: helvetica,
-          color: rgb(0.08, 0.33, 0.18),
+          color: rgb(0, 0, 0),
           maxWidth: Math.max(10, pdfWidth - 8)
         })
       }
