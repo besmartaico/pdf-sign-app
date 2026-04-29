@@ -17,6 +17,9 @@ export default function AdminDocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [sendModal, setSendModal] = useState<{ doc: Template } | null>(null)
+  const [blobs, setBlobs] = useState<{ url: string; pathname: string; size: number; uploadedAt: string }[]>([])
+  const [blobsLoading, setBlobsLoading] = useState(false)
+  const [deletingUrl, setDeletingUrl] = useState<string | null>(null)
   const [signerEmail, setSignerEmail] = useState("")
   const [signerName, setSignerName] = useState("")
   const [sendStatus, setSendStatus] = useState("")
@@ -275,6 +278,42 @@ export default function AdminDocumentsPage() {
           </div>
         </div>
       )}
+
+      {/* Signed PDFs Section */}
+      <div style={{ marginTop: "40px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: C.text }}>📥 Signed PDFs</h2>
+          <button onClick={fetchBlobs} style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.textMuted, padding: "6px 14px", borderRadius: "7px", cursor: "pointer", fontSize: "13px" }}>
+            {blobsLoading ? "Refreshing..." : "⟳ Refresh"}
+          </button>
+        </div>
+        {blobsLoading && <div style={{ color: C.textMuted, fontSize: "14px" }}>Loading...</div>}
+        {!blobsLoading && blobs.length === 0 && (
+          <div style={{ color: C.textMuted, fontSize: "14px", padding: "20px 0" }}>No signed PDFs stored yet.</div>
+        )}
+        {blobs.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {blobs.map(blob => (
+              <div key={blob.url} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ fontWeight: 500, fontSize: "14px", color: C.text }}>{blob.pathname.split("/").pop()}</div>
+                  <div style={{ fontSize: "12px", color: C.textDim, marginTop: "2px" }}>
+                    {new Date(blob.uploadedAt).toLocaleString()} · {(blob.size / 1024).toFixed(1)} KB
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDownloadAndDelete(blob)}
+                  disabled={deletingUrl === blob.url}
+                  style={{ background: deletingUrl === blob.url ? C.surface : C.accent, color: "#fff", padding: "8px 16px", borderRadius: "7px", border: "none", cursor: deletingUrl === blob.url ? "default" : "pointer", fontSize: "13px", fontWeight: 600, opacity: deletingUrl === blob.url ? 0.6 : 1 }}
+                >
+                  {deletingUrl === blob.url ? "Deleting..." : "⬇ Download & Delete"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
