@@ -55,6 +55,25 @@ export default function AdminDocumentsPage() {
       .finally(() => setBlobsLoading(false))
   }
 
+  function handleDownloadAndDelete(blob: { url: string; pathname: string }) {
+    const a = document.createElement("a")
+    a.href = blob.url
+    a.download = blob.pathname.split("/").pop() || "signed.pdf"
+    a.click()
+    setDeletingUrl(blob.url)
+    setTimeout(async () => {
+      try {
+        await fetch("/api/admin/signed-pdfs", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: blob.url }),
+        })
+        setBlobs(prev => prev.filter(b => b.url !== blob.url))
+      } catch (e) { console.error(e) }
+      finally { setDeletingUrl(null) }
+    }, 1500)
+  }
+
   async function handleDelete(doc: Template) {
     if (!confirm(`Delete "${doc.name}"? This cannot be undone.`)) return
     setDeletingId(doc.id)
