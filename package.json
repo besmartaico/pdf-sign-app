@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "resend": "^4.0.0",
     "@vercel/blob": "^0.27.0",
     "@supabase/supabase-js": "^2.45.0",
     "googleapis": "^171.4.0",
