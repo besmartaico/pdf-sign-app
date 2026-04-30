@@ -26,6 +26,20 @@ export default function SignedPdfsPage() {
 
   useEffect(() => { fetchBlobs() }, [])
 
+  const handleDelete = async (blob: Blob) => {
+    if (!confirm(`Delete "${blob.pathname.split("/").pop()}"? This cannot be undone.`)) return
+    setDeletingUrl(blob.url)
+    try {
+      await fetch("/api/admin/signed-pdfs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: blob.url }),
+      })
+      setBlobs(prev => prev.filter(b => b.url !== blob.url))
+    } catch (e) { console.error(e) }
+    finally { setDeletingUrl(null) }
+  }
+
   const handleDownloadAndDelete = (blob: Blob) => {
     const a = document.createElement("a")
     a.href = blob.url
@@ -86,6 +100,13 @@ export default function SignedPdfsPage() {
                   </div>
                 </div>
                 <button
+                onClick={() => handleDelete(blob)}
+                disabled={deletingUrl === blob.url}
+                style={{ background: "rgba(239,68,68,0.15)", color: C.danger, padding: "8px 14px", borderRadius: "7px", border: `1px solid ${C.danger}`, cursor: deletingUrl === blob.url ? "default" : "pointer", fontSize: "13px", fontWeight: 600, opacity: deletingUrl === blob.url ? 0.6 : 1, whiteSpace: "nowrap", marginRight: "8px" }}
+              >
+                🗑 Delete
+              </button>
+              <button
                   onClick={() => handleDownloadAndDelete(blob)}
                   disabled={deletingUrl === blob.url}
                   style={{ background: deletingUrl === blob.url ? C.surface : C.accent, color: "#fff", padding: "8px 16px", borderRadius: "7px", border: "none", cursor: deletingUrl === blob.url ? "default" : "pointer", fontSize: "13px", fontWeight: 600, opacity: deletingUrl === blob.url ? 0.6 : 1, whiteSpace: "nowrap" }}
