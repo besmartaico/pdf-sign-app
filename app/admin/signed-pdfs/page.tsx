@@ -13,6 +13,7 @@ export default function SignedPdfsPage() {
   const [blobs, setBlobs] = useState<Blob[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null)
+  const [confirmBlob, setConfirmBlob] = useState<Blob | null>(null)
   const [search, setSearch] = useState("")
 
   const fetchBlobs = () => {
@@ -26,8 +27,14 @@ export default function SignedPdfsPage() {
 
   useEffect(() => { fetchBlobs() }, [])
 
-  const handleDelete = async (blob: Blob) => {
-    if (!confirm(`Delete "${blob.pathname.split("/").pop()}"? This cannot be undone.`)) return
+  const handleDelete = (blob: Blob) => {
+    setConfirmBlob(blob)
+  }
+
+  const performDelete = async () => {
+    if (!confirmBlob) return
+    const blob = confirmBlob
+    setConfirmBlob(null)
     setDeletingUrl(blob.url)
     try {
       await fetch("/api/admin/signed-pdfs", {
@@ -118,6 +125,21 @@ export default function SignedPdfsPage() {
           </div>
         )}
       </div>
+
+      {confirmBlob && (
+        <div onClick={() => setConfirmBlob(null)} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:"20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:C.surface,border:`1px solid ${C.border}`,borderRadius:"12px",padding:"24px",maxWidth:"420px",width:"100%" }}>
+            <h3 style={{ margin:"0 0 12px",fontSize:"17px",fontWeight:700,color:C.text }}>Confirm Delete</h3>
+            <p style={{ margin:"0 0 20px",color:C.textMuted,fontSize:"14px",wordBreak:"break-all" }}>
+              Permanently delete <strong style={{ color:C.text }}>{confirmBlob.pathname.split("/").pop()}</strong>? This cannot be undone.
+            </p>
+            <div style={{ display:"flex",gap:"10px",justifyContent:"flex-end" }}>
+              <button onClick={() => setConfirmBlob(null)} style={{ background:C.surface,border:`1px solid ${C.border}`,color:C.textMuted,padding:"9px 18px",borderRadius:"7px",cursor:"pointer",fontSize:"14px" }}>Cancel</button>
+              <button onClick={performDelete} style={{ background:C.danger,color:"#fff",border:"none",padding:"9px 18px",borderRadius:"7px",cursor:"pointer",fontSize:"14px",fontWeight:600 }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
