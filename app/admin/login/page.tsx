@@ -45,7 +45,7 @@ function LoginForm() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "400px" }}>
-        <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: 700, color: C.text }}>Admin Login</h1>
+        <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: 700, color: C.text }}>Login</h1>
         <p style={{ margin: "0 0 28px", color: C.textMuted, fontSize: "14px" }}>Sign in to manage documents</p>
 
         {error && (
@@ -61,7 +61,7 @@ function LoginForm() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter username"
+            placeholder="Enter username (admin for default)"
             autoFocus
             required
             style={{ display: "block", width: "100%", padding: "11px 14px", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.text, fontSize: "15px", marginBottom: "16px", boxSizing: "border-box" as const, outline: "none" }}
