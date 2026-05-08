@@ -60,6 +60,7 @@ export default function PdfViewer({
           return (
             <div
               key={`page_${pageNumber}`}
+              data-page={pageNumber}
               style={{
                 position: "relative",
                 width: "800px",
