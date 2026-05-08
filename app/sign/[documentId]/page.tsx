@@ -175,7 +175,7 @@ export default function SignPage() {
     setUploadError("")
     setIsProcessingUpload(false)
     const existing = values[field.id]
-    if (field.type === "signature") {
+    if (field.type === "signature" || field.type === "initials") {
       setSignatureMode(existing?.signatureMode ?? defaultSignatureMode)
       setSignatureText(existing?.signatureText ?? "")
       setSignatureFont(existing?.signatureFont ?? signatureFontOptions[0].value)
@@ -186,16 +186,18 @@ export default function SignPage() {
     if (field.type === "date") setDateValue(existing?.value ?? todayISO())
   }
 
-  function saveSignatureToAll() {
-    if (!activeField || activeField.type !== "signature") return
-    const nextValue: FilledFieldValue = { signatureMode, signatureText, signatureFont, signatureStyle, signatureVariant }
-    if (signatureMode === "drawn" || signatureMode === "uploaded") nextValue.signatureImage = signatureImage
-    // Apply to every signature field on the document
+  function saveValueToAllOfType() {
+    if (!activeField) return
+    const t = activeField.type
     setValues((cur) => {
       const updated = { ...cur }
-      fields.forEach((f) => {
-        if (f.type === "signature") updated[f.id] = nextValue
-      })
+      if (t === "signature" || t === "initials") {
+        const nextValue: FilledFieldValue = { signatureMode, signatureText, signatureFont, signatureStyle, signatureVariant }
+        if (signatureMode === "drawn" || signatureMode === "uploaded") nextValue.signatureImage = signatureImage
+        fields.forEach((f) => { if (f.type === t) updated[f.id] = nextValue })
+      } else if (t === "date") {
+        fields.forEach((f) => { if (f.type === "date") updated[f.id] = { value: dateValue } })
+      }
       return updated
     })
     setActiveFieldId(null)
@@ -203,7 +205,7 @@ export default function SignPage() {
 
   function saveActiveField() {
     if (!activeField) return
-    if (activeField.type === "signature") {
+    if (activeField.type === "signature" || activeField.type === "initials") {
       const nextValue: FilledFieldValue = { signatureMode, signatureText, signatureFont, signatureStyle, signatureVariant }
       if (signatureMode === "drawn" || signatureMode === "uploaded") nextValue.signatureImage = signatureImage
       setValues((cur) => ({ ...cur, [activeField.id]: nextValue }))
@@ -576,9 +578,9 @@ export default function SignPage() {
             {/* Actions */}
             <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
               <button type="button" onClick={saveActiveField} style={{ ...primaryBtn, flex: 1 }}>Save</button>
-              {activeField?.type === "signature" && fields.filter(f => f.type === "signature").length > 1 && (
-                <button type="button" onClick={saveSignatureToAll} style={{ ...primaryBtn, flex: 1, background: "#1e40af" }} title="Apply this signature to every signature field on the document">
-                  Apply to All ({fields.filter(f => f.type === "signature").length})
+              {activeField && (activeField.type === "signature" || activeField.type === "initials" || activeField.type === "date") && fields.filter(f => f.type === activeField.type).length > 1 && (
+                <button type="button" onClick={saveValueToAllOfType} style={{ ...primaryBtn, flex: 1, background: "#1e40af" }} title={`Apply this ${activeField.type} to every ${activeField.type} field on the document`}>
+                  Apply to All ({fields.filter(f => f.type === activeField.type).length})
                 </button>
               )}
               <button type="button" onClick={closeEditor} style={secondaryBtn}>Cancel</button>
