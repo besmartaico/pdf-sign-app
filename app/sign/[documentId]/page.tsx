@@ -186,6 +186,21 @@ export default function SignPage() {
     if (field.type === "date") setDateValue(existing?.value ?? todayISO())
   }
 
+  function saveSignatureToAll() {
+    if (!activeField || activeField.type !== "signature") return
+    const nextValue: FilledFieldValue = { signatureMode, signatureText, signatureFont, signatureStyle, signatureVariant }
+    if (signatureMode === "drawn" || signatureMode === "uploaded") nextValue.signatureImage = signatureImage
+    // Apply to every signature field on the document
+    setValues((cur) => {
+      const updated = { ...cur }
+      fields.forEach((f) => {
+        if (f.type === "signature") updated[f.id] = nextValue
+      })
+      return updated
+    })
+    setActiveFieldId(null)
+  }
+
   function saveActiveField() {
     if (!activeField) return
     if (activeField.type === "signature") {
@@ -559,8 +574,13 @@ export default function SignPage() {
             )}
 
             {/* Actions */}
-            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+            <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
               <button type="button" onClick={saveActiveField} style={{ ...primaryBtn, flex: 1 }}>Save</button>
+              {activeField?.type === "signature" && fields.filter(f => f.type === "signature").length > 1 && (
+                <button type="button" onClick={saveSignatureToAll} style={{ ...primaryBtn, flex: 1, background: "#1e40af" }} title="Apply this signature to every signature field on the document">
+                  Apply to All ({fields.filter(f => f.type === "signature").length})
+                </button>
+              )}
               <button type="button" onClick={closeEditor} style={secondaryBtn}>Cancel</button>
             </div>
           </div>
