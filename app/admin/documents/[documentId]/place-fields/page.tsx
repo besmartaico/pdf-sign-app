@@ -75,17 +75,21 @@ export default function PlaceFieldsPage() {
   useEffect(() => {
     if (numPages <= 1) return
     const findMostVisible = () => {
-      const pages = document.querySelectorAll('.react-pdf__Page')
+      const pages = document.querySelectorAll('[data-page]')
       if (!pages.length) return
       const viewportH = window.innerHeight
-      let bestIdx = 0
+      let bestPage = 1
       let bestScore = -1
-      pages.forEach((p, i) => {
+      pages.forEach((p) => {
         const r = p.getBoundingClientRect()
         const visible = Math.max(0, Math.min(r.bottom, viewportH) - Math.max(r.top, 0))
-        if (visible > bestScore) { bestScore = visible; bestIdx = i }
+        if (visible > bestScore) {
+          bestScore = visible
+          const n = parseInt(p.getAttribute('data-page') || '1', 10)
+          bestPage = n
+        }
       })
-      setVisiblePage(bestIdx + 1)
+      setVisiblePage(bestPage)
     }
     findMostVisible()
     window.addEventListener('scroll', findMostVisible, { passive: true })
