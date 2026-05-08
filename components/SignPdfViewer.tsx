@@ -88,7 +88,7 @@ export default function SignPdfViewer({
                 .map((field) => {
                   const fieldValue = values[field.id]
                   const isSignatureImage =
-                    field.type === "signature" && Boolean(fieldValue?.signatureImage)
+                    (field.type === "signature" || field.type === "initials") && Boolean(fieldValue?.signatureImage)
 
                   return (
                     <button
@@ -133,7 +133,7 @@ function FieldDisplay({
   field: PdfField
   fieldValue?: FilledFieldValue
 }) {
-  if (field.type === "signature") {
+  if (field.type === "signature" || field.type === "initials") {
     if (fieldValue?.signatureImage) {
       return (
         <div
