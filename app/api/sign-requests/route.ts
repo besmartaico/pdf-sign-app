@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
       const pdfHeight = field.height * scale
       const pdfY = pageHeight - (field.y + field.height) * scale
 
-      if (field.type === "signature") {
+      if (field.type === "signature" || field.type === "initials") {
         if (fieldValue.signatureImage) {
           const imageBytes = dataUrlToBuffer(fieldValue.signatureImage)
           if (!imageBytes) continue
