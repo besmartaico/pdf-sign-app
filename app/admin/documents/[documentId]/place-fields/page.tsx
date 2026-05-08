@@ -22,6 +22,7 @@ const C = {
 
 const FIELD_COLORS: Record<PdfFieldType, { bg: string; border: string; text: string; icon: string }> = {
   signature: { bg: "rgba(59,130,246,0.12)", border: "#3b82f6", text: "#93c5fd", icon: "✍️" },
+  initials:  { bg: "rgba(168,85,247,0.12)",  border: "#a855f7", text: "#a855f7", icon: "🅰" },
   text:      { bg: "rgba(34,197,94,0.1)",   border: "#22c55e", text: "#86efac", icon: "📝" },
   date:      { bg: "rgba(245,158,11,0.1)",  border: "#f59e0b", text: "#fcd34d", icon: "📅" }
 }
@@ -104,8 +105,8 @@ export default function PlaceFieldsPage() {
     const newField: PdfField = {
       id: crypto.randomUUID(), type, page: visiblePage,
       x: 120, y: 120 + fields.length * 70,
-      width: type === "signature" ? 180 : 160, height: 50,
-      label: type === "signature" ? "Signature" : type === "text" ? "Text" : "Date"
+      width: type === "signature" ? 180 : type === "initials" ? 80 : 160, height: type === "initials" ? 40 : 50,
+      label: type === "signature" ? "Signature" : type === "initials" ? "Initials" : type === "text" ? "Text" : "Date"
     }
     setFields((cur) => [...cur, newField])
     setSelectedFieldId(newField.id)
@@ -145,7 +146,7 @@ export default function PlaceFieldsPage() {
         <div style={{ width: "1px", height: "28px", background: C.border }} />
 
         {/* Add field buttons */}
-        {(["signature", "text", "date"] as PdfFieldType[]).map((type) => {
+        {(["signature", "initials", "text", "date"] as PdfFieldType[]).map((type) => {
           const fc = FIELD_COLORS[type]
           return (
             <button key={type} onClick={() => addField(type)} style={{
