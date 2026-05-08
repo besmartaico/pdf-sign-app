@@ -9,7 +9,7 @@ import "react-pdf/dist/Page/TextLayer.css"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
-export type PdfFieldType = "signature" | "text" | "date"
+export type PdfFieldType = "signature" | "initials" | "text" | "date"
 
 export type PdfField = {
   id: string
