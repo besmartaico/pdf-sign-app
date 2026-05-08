@@ -35,6 +35,7 @@ export default function PlaceFieldsPage() {
   const [fields, setFields] = useState<PdfField[]>([])
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
   const [numPages, setNumPages] = useState(1)
+  const [visiblePage, setVisiblePage] = useState(1)
   const [isLocked, setIsLocked] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -68,9 +69,36 @@ export default function PlaceFieldsPage() {
   const selectedField = fields.find((f) => f.id === selectedFieldId) ?? fields[0] ?? null
   const pageOptions = useMemo(() => Array.from({ length: numPages }, (_, i) => i + 1), [numPages])
 
+
+
+  // Track which page is most visible in the viewport (so new fields default there)
+  useEffect(() => {
+    if (numPages <= 1) return
+    const findMostVisible = () => {
+      const pages = document.querySelectorAll('.react-pdf__Page')
+      if (!pages.length) return
+      const viewportH = window.innerHeight
+      let bestIdx = 0
+      let bestScore = -1
+      pages.forEach((p, i) => {
+        const r = p.getBoundingClientRect()
+        const visible = Math.max(0, Math.min(r.bottom, viewportH) - Math.max(r.top, 0))
+        if (visible > bestScore) { bestScore = visible; bestIdx = i }
+      })
+      setVisiblePage(bestIdx + 1)
+    }
+    findMostVisible()
+    window.addEventListener('scroll', findMostVisible, { passive: true })
+    window.addEventListener('resize', findMostVisible)
+    return () => {
+      window.removeEventListener('scroll', findMostVisible)
+      window.removeEventListener('resize', findMostVisible)
+    }
+  }, [numPages])
+
   function addField(type: PdfFieldType) {
     const newField: PdfField = {
-      id: crypto.randomUUID(), type, page: 1,
+      id: crypto.randomUUID(), type, page: visiblePage,
       x: 120, y: 120 + fields.length * 70,
       width: type === "signature" ? 180 : 160, height: 50,
       label: type === "signature" ? "Signature" : type === "text" ? "Text" : "Date"
